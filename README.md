@@ -17,15 +17,17 @@ import (
 
 	"github.com/frrad/boolform/bf"
 	"github.com/frrad/boolform/bfgophersat"
+	"github.com/frrad/boolform/bfgosat"
 )
 
 func main() {
 	x := bf.Var("x")
 	y := bf.Var("y")
-	f := bf.And(x, y)
+	z := bf.Var("z")
+	f := bf.And(bf.And(x, y), bf.Not(z))
 
 	fmt.Println(bfgophersat.Solve(f))
+	fmt.Println(bfgosat.Solve(f))
 }
-
 ```
 

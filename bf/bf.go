@@ -24,21 +24,21 @@ type Formula interface {
 // "c a=1".
 func Dimacs(f Formula, w io.Writer) error {
 	cnf := AsCnf(f)
-	nbVars := len(cnf.Vars.all)
+	nbVars := len(cnf.vars.all)
 	nbClauses := len(cnf.Clauses)
 	prefix := fmt.Sprintf("p cnf %d %d\n", nbVars, nbClauses)
 	if _, err := io.WriteString(w, prefix); err != nil {
 		return fmt.Errorf("could not write DIMACS output: %v", err)
 	}
 	var pbVars []string
-	for v := range cnf.Vars.Pb {
+	for v := range cnf.vars.Pb {
 		if !v.dummy {
 			pbVars = append(pbVars, v.Name)
 		}
 	}
 	sort.Sort(sort.StringSlice(pbVars))
 	for _, v := range pbVars {
-		idx := cnf.Vars.Pb[pbVar(v)]
+		idx := cnf.vars.Pb[pbVar(v)]
 		line := fmt.Sprintf("c %s=%d\n", v, idx)
 		if _, err := io.WriteString(w, line); err != nil {
 			return fmt.Errorf("could not write DIMACS output: %v", err)
@@ -397,13 +397,13 @@ func (vars *vars) dummy() int {
 // A CNF is the representation of a boolean formula as a conjunction of disjunction.
 // It can be solved by a SAT solver.
 type cnf struct {
-	Vars    vars
+	vars    vars
 	Clauses [][]int
 }
 
 func (c *cnf) Lookup() map[int]string {
 	lookup := map[int]string{}
-	for v, ix := range c.Vars.Pb {
+	for v, ix := range c.vars.Pb {
 		lookup[ix-1] = v.Name
 	}
 	return lookup
@@ -413,7 +413,7 @@ func (c *cnf) Lookup() map[int]string {
 func AsCnf(f Formula) *cnf {
 	vars := vars{all: make(map[variable]int), Pb: make(map[variable]int)}
 	clauses := cnfRec(f.nnf(), &vars)
-	return &cnf{Vars: vars, Clauses: clauses}
+	return &cnf{vars: vars, Clauses: clauses}
 }
 
 // transforms the f NNF formula into a CNF formula.

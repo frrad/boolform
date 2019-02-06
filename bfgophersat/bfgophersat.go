@@ -11,7 +11,7 @@ type Problem struct {
 }
 
 func Export(f bf.Formula) Problem {
-	cnf := bf.AsCnf(f)
+	cnf := bf.AsCNF(f)
 
 	return Problem{
 		GSProb: solver.ParseSlice(cnf.Clauses),

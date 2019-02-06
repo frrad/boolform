@@ -23,7 +23,7 @@ type Formula interface {
 // For instance, if the variable "a" is associated with the index 1, there will be a comment line
 // "c a=1".
 func Dimacs(f Formula, w io.Writer) error {
-	cnf := AsCnf(f)
+	cnf := AsCNF(f)
 	nbVars := len(cnf.vars.all)
 	nbClauses := len(cnf.Clauses)
 	prefix := fmt.Sprintf("p cnf %d %d\n", nbVars, nbClauses)
@@ -409,8 +409,8 @@ func (c *cnf) Lookup() map[int]string {
 	return lookup
 }
 
-// AsCnf returns a CNF representation of the given formula.
-func AsCnf(f Formula) *cnf {
+// AsCNF returns a CNF representation of the given formula.
+func AsCNF(f Formula) *cnf {
 	vars := vars{all: make(map[variable]int), Pb: make(map[variable]int)}
 	clauses := cnfRec(f.nnf(), &vars)
 	return &cnf{vars: vars, Clauses: clauses}

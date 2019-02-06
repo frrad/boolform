@@ -2,7 +2,7 @@ package bfgosat
 
 import (
 	"github.com/frrad/boolform/bf"
-	sat "github.com/mitchellh/go-sat"
+	gosat "github.com/mitchellh/go-sat"
 	"github.com/mitchellh/go-sat/cnf"
 )
 
@@ -11,8 +11,9 @@ type Problem struct {
 	Lookup map[int]string
 }
 
+// Export takes a bf formula and returns a lightly wrapped go-sat formula.
 func Export(f bf.Formula) Problem {
-	c := bf.AsCnf(f)
+	c := bf.AsCNF(f)
 
 	form := cnf.NewFormulaFromInts(c.Clauses)
 
@@ -22,14 +23,13 @@ func Export(f bf.Formula) Problem {
 	}
 }
 
-// solve solves the given formula.
-// cnf is given to gophersat.
-// If it is satisfiable, the function returns a model, associating each variable name with its binding.
-// Else, the function returns nil.
+// Solve solves the given formula. If it is satisfiable, the function returns a
+// model, associating each variable name with its binding. Else, the function
+// returns nil.
 func Solve(f bf.Formula) map[string]bool {
 	pb := Export(f)
 
-	s := sat.New()
+	s := gosat.New()
 	s.AddFormula(*pb.GSForm)
 	sat := s.Solve()
 	if !sat {

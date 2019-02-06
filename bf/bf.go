@@ -7,8 +7,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/crillab/gophersat/solver"
 )
 
 // A Formula is any kind of boolean formula, not necessarily in CNF.
@@ -18,13 +16,6 @@ type Formula interface {
 	Eval(model map[string]bool) bool
 }
 
-// Solve solves the given formula.
-// f is first converted as a CNF formula. It is then given to gophersat.
-// The function returns a model associating each variable name with its binding, or nil if the formula was not satisfiable.
-func Solve(f Formula) map[string]bool {
-	return asCnf(f).solve()
-}
-
 // Dimacs writes the DIMACS CNF version of the formula on w.
 // It is useful so as to feed it to any SAT solver.
 // The original names of variables is associated with their DIMACS integer counterparts
@@ -32,28 +23,28 @@ func Solve(f Formula) map[string]bool {
 // For instance, if the variable "a" is associated with the index 1, there will be a comment line
 // "c a=1".
 func Dimacs(f Formula, w io.Writer) error {
-	cnf := asCnf(f)
-	nbVars := len(cnf.vars.all)
-	nbClauses := len(cnf.clauses)
+	cnf := AsCnf(f)
+	nbVars := len(cnf.Vars.all)
+	nbClauses := len(cnf.Clauses)
 	prefix := fmt.Sprintf("p cnf %d %d\n", nbVars, nbClauses)
 	if _, err := io.WriteString(w, prefix); err != nil {
 		return fmt.Errorf("could not write DIMACS output: %v", err)
 	}
 	var pbVars []string
-	for v := range cnf.vars.pb {
+	for v := range cnf.Vars.Pb {
 		if !v.dummy {
-			pbVars = append(pbVars, v.name)
+			pbVars = append(pbVars, v.Name)
 		}
 	}
 	sort.Sort(sort.StringSlice(pbVars))
 	for _, v := range pbVars {
-		idx := cnf.vars.pb[pbVar(v)]
+		idx := cnf.Vars.Pb[pbVar(v)]
 		line := fmt.Sprintf("c %s=%d\n", v, idx)
 		if _, err := io.WriteString(w, line); err != nil {
 			return fmt.Errorf("could not write DIMACS output: %v", err)
 		}
 	}
-	for _, clause := range cnf.clauses {
+	for _, clause := range cnf.Clauses {
 		strClause := make([]string, len(clause))
 		for i, lit := range clause {
 			strClause[i] = strconv.Itoa(lit)
@@ -72,8 +63,8 @@ type trueConst struct{}
 // True is the constant denoting a tautology.
 var True Formula = trueConst{}
 
-func (t trueConst) nnf() Formula   { return t }
-func (t trueConst) String() string { return "⊤" }
+func (t trueConst) nnf() Formula                    { return t }
+func (t trueConst) String() string                  { return "⊤" }
 func (t trueConst) Eval(model map[string]bool) bool { return true }
 
 // The "false" constant.
@@ -82,8 +73,8 @@ type falseConst struct{}
 // False is the constant denoting a contradiction.
 var False Formula = falseConst{}
 
-func (f falseConst) nnf() Formula   { return f }
-func (f falseConst) String() string { return "⊥" }
+func (f falseConst) nnf() Formula                    { return f }
+func (f falseConst) String() string                  { return "⊥" }
 func (f falseConst) Eval(model map[string]bool) bool { return false }
 
 // Var generates a named boolean variable in a formula.
@@ -92,15 +83,15 @@ func Var(name string) Formula {
 }
 
 func pbVar(name string) variable {
-	return variable{name: name, dummy: false}
+	return variable{Name: name, dummy: false}
 }
 
 func dummyVar(name string) variable {
-	return variable{name: name, dummy: true}
+	return variable{Name: name, dummy: true}
 }
 
 type variable struct {
-	name  string
+	Name  string
 	dummy bool
 }
 
@@ -109,13 +100,13 @@ func (v variable) nnf() Formula {
 }
 
 func (v variable) String() string {
-	return v.name
+	return v.Name
 }
 
 func (v variable) Eval(model map[string]bool) bool {
-	b, ok := model[v.name]
+	b, ok := model[v.Name]
 	if !ok {
-		panic(fmt.Errorf("Model lacks binding for variable %s", v.name))
+		panic(fmt.Errorf("Model lacks binding for variable %s", v.Name))
 	}
 	return b
 }
@@ -131,9 +122,9 @@ func (l lit) nnf() Formula {
 
 func (l lit) String() string {
 	if l.signed {
-		return "not(" + l.v.name + ")"
+		return "not(" + l.v.Name + ")"
 	}
-	return l.v.name
+	return l.v.Name
 }
 
 func (l lit) Eval(model map[string]bool) bool {
@@ -344,7 +335,7 @@ func uniqueRec(vars ...variable) Formula {
 	linesF := make([][]Formula, nbLines)
 	allNames := make([]string, len(vars))
 	for i := range vars {
-		allNames[i] = vars[i].name
+		allNames[i] = vars[i].Name
 	}
 	fullName := strings.Join(allNames, "-")
 	for i := range lines {
@@ -378,7 +369,7 @@ func uniqueRec(vars ...variable) Formula {
 // vars associate variable names with numeric indices.
 type vars struct {
 	all map[variable]int // all vars, including those created when converting the formula
-	pb  map[variable]int // Only the vars that appeared orinigally in the problem
+	Pb  map[variable]int // Only the vars that appeared orinigally in the problem
 }
 
 // litValue returns the int value associated with the given problem var.
@@ -388,7 +379,7 @@ func (vars *vars) litValue(l lit) int {
 	if !ok {
 		val = len(vars.all) + 1
 		vars.all[l.v] = val
-		vars.pb[l.v] = val
+		vars.Pb[l.v] = val
 	}
 	if l.signed {
 		return -val
@@ -406,33 +397,23 @@ func (vars *vars) dummy() int {
 // A CNF is the representation of a boolean formula as a conjunction of disjunction.
 // It can be solved by a SAT solver.
 type cnf struct {
-	vars    vars
-	clauses [][]int
+	Vars    vars
+	Clauses [][]int
 }
 
-// solve solves the given formula.
-// cnf is given to gophersat.
-// If it is satisfiable, the function returns a model, associating each variable name with its binding.
-// Else, the function returns nil.
-func (cnf *cnf) solve() map[string]bool {
-	pb := solver.ParseSlice(cnf.clauses)
-	s := solver.New(pb)
-	if s.Solve() != solver.Sat {
-		return nil
+func (c *cnf) Lookup() map[int]string {
+	lookup := map[int]string{}
+	for v, ix := range c.Vars.Pb {
+		lookup[ix-1] = v.Name
 	}
-	m := s.Model()
-	vars := make(map[string]bool)
-	for v, idx := range cnf.vars.pb {
-		vars[v.name] = m[idx-1]
-	}
-	return vars
+	return lookup
 }
 
-// asCnf returns a CNF representation of the given formula.
-func asCnf(f Formula) *cnf {
-	vars := vars{all: make(map[variable]int), pb: make(map[variable]int)}
+// AsCnf returns a CNF representation of the given formula.
+func AsCnf(f Formula) *cnf {
+	vars := vars{all: make(map[variable]int), Pb: make(map[variable]int)}
 	clauses := cnfRec(f.nnf(), &vars)
-	return &cnf{vars: vars, clauses: clauses}
+	return &cnf{Vars: vars, Clauses: clauses}
 }
 
 // transforms the f NNF formula into a CNF formula.

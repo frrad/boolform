@@ -6,7 +6,7 @@ import (
 )
 
 type Problem struct {
-	GSPRob *solver.Problem
+	GSProb *solver.Problem
 	Lookup map[int]string
 }
 
@@ -14,7 +14,7 @@ func Export(f bf.Formula) Problem {
 	cnf := bf.AsCnf(f)
 
 	return Problem{
-		GSPRob: solver.ParseSlice(cnf.Clauses),
+		GSProb: solver.ParseSlice(cnf.Clauses),
 		Lookup: cnf.Lookup(),
 	}
 }
@@ -26,7 +26,7 @@ func Export(f bf.Formula) Problem {
 func Solve(f bf.Formula) map[string]bool {
 	pb := Export(f)
 
-	s := solver.New(pb.GSPRob)
+	s := solver.New(pb.GSProb)
 	if s.Solve() != solver.Sat {
 		return nil
 	}

@@ -299,12 +299,17 @@ func Xor(f1, f2 Formula) Formula {
 
 // Unique indicates exactly one of the given variables must be true.
 // It might create dummy variables to reduce the number of generated clauses.
-func Unique(vars ...string) Formula {
+func Unique(vars ...Formula) Formula {
 	vars2 := make([]variable, len(vars))
+	eq := make([]Formula, len(vars))
+
+	// improvment: don't do this when the input is already variable
 	for i, v := range vars {
-		vars2[i] = pbVar(v)
+		vars2[i] = dummyVar(fmt.Sprintf("u-%d", i)) // fix: breaks if called multiple times
+		eq[i] = Eq(vars2[i], v)
 	}
-	return uniqueRec(vars2...)
+
+	return And(append(eq, uniqueRec(vars2...))...)
 }
 
 // uniqueSmall generates clauses indicating exactly one of the given variables is true.

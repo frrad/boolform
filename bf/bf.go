@@ -379,7 +379,10 @@ func (vars *vars) litValue(l lit) int {
 	if !ok {
 		val = len(vars.all) + 1
 		vars.all[l.v] = val
-		vars.Pb[l.v] = val
+		if !l.v.dummy {
+			vars.Pb[l.v] = val
+		}
+
 	}
 	if l.signed {
 		return -val

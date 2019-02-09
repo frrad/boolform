@@ -7,8 +7,8 @@ import (
 )
 
 type Problem struct {
-	Gini   *gini.Gini
-	Lookup map[int]string
+	GiniSol *gini.Gini
+	Lookup  map[int]string
 }
 
 // Export takes a bf formula and returns a lightly wrapped gini instance.
@@ -24,8 +24,8 @@ func Export(f bf.Formula) Problem {
 	}
 
 	return Problem{
-		Gini:   g,
-		Lookup: c.Lookup(),
+		GiniSol: g,
+		Lookup:  c.Lookup(),
 	}
 }
 
@@ -35,14 +35,14 @@ func Export(f bf.Formula) Problem {
 func Solve(f bf.Formula) map[string]bool {
 	pb := Export(f)
 
-	worked := pb.Gini.Solve()
+	worked := pb.GiniSol.Solve()
 	if worked != 1 {
 		return nil
 	}
 
 	vars := map[string]bool{}
 	for idx, name := range pb.Lookup {
-		vars[name] = pb.Gini.Value(z.Dimacs2Lit(idx))
+		vars[name] = pb.GiniSol.Value(z.Dimacs2Lit(idx))
 	}
 
 	return vars

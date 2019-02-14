@@ -409,6 +409,8 @@ type CNF struct {
 	Clauses [][]int
 }
 
+// Lookup returns a map recording the correspondence between variable numbers in
+// the CNF representation and original variable names.
 func (c *CNF) Lookup() map[int]string {
 	lookup := map[int]string{}
 	for v, ix := range c.vars.Pb {

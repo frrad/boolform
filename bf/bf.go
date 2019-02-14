@@ -402,14 +402,14 @@ func (vars *vars) dummy() int {
 	return val
 }
 
-// A CNF is the representation of a boolean formula as a conjunction of disjunction.
-// It can be solved by a SAT solver.
-type cnf struct {
+// A CNF is the representation of a boolean formula as a conjunction of
+// disjunction.  It can be solved by a SAT solver.
+type CNF struct {
 	vars    vars
 	Clauses [][]int
 }
 
-func (c *cnf) Lookup() map[int]string {
+func (c *CNF) Lookup() map[int]string {
 	lookup := map[int]string{}
 	for v, ix := range c.vars.Pb {
 		lookup[ix-1] = v.Name
@@ -418,16 +418,17 @@ func (c *cnf) Lookup() map[int]string {
 }
 
 // AsCNF returns a CNF representation of the given formula.
-func AsCNF(f Formula) *cnf {
+func AsCNF(f Formula) *CNF {
 	vars := vars{all: make(map[variable]int), Pb: make(map[variable]int)}
 	clauses := cnfRec(f.nnf(), &vars)
-	return &cnf{vars: vars, Clauses: clauses}
+	return &CNF{vars: vars, Clauses: clauses}
 }
 
-// transforms the f NNF formula into a CNF formula.
-// nbDummies is the current number of dummy variables created.
-// Note: code should be improved, there are a few useless allocs/deallocs
-// here and there.
+// transforms the f NNF formula into a CNF formula.  nbDummies is the current
+// number of dummy variables created.
+//
+// Note: code should be improved, there are a few useless allocs/deallocs here
+// and there.
 func cnfRec(f Formula, vars *vars) [][]int {
 	switch f := f.(type) {
 	case lit:

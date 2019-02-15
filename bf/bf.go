@@ -297,15 +297,20 @@ func Xor(f1, f2 Formula) Formula {
 	return and{or{not{f1}, not{f2}}, or{f1, f2}}
 }
 
+// wow, global vars. you are better than this.
+var uniqueify int
+
 // Unique indicates exactly one of the given variables must be true.
 // It might create dummy variables to reduce the number of generated clauses.
 func Unique(vars ...Formula) Formula {
+	uniqueify++
+
 	vars2 := make([]variable, len(vars))
 	eq := make([]Formula, len(vars))
 
 	// improvment: don't do this when the input is already variable
 	for i, v := range vars {
-		vars2[i] = dummyVar(fmt.Sprintf("u-%d", i)) // fix: breaks if called multiple times
+		vars2[i] = dummyVar(fmt.Sprintf("u-%d-%d", i, uniqueify))
 		eq[i] = Eq(vars2[i], v)
 	}
 

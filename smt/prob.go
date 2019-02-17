@@ -1,4 +1,4 @@
-package bf
+package smt
 
 // Problem is a thin wrapper around Formula to allow for gradually building up a
 // complex formula out of many separate assertions.

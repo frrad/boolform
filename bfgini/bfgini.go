@@ -29,9 +29,9 @@ func Export(f bf.Formula) Problem {
 	}
 }
 
-// Solve solves the given formula. If it is satisfiable, the function returns a
-// model, associating each variable name with its binding. Else, the function
-// returns nil.
+// Solve solves the given formula with gini. If it is satisfiable, the function
+// returns a model, associating each variable name with its binding. Else, the
+// function returns nil.
 func Solve(f bf.Formula) map[string]bool {
 	pb := Export(f)
 

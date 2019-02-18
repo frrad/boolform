@@ -40,7 +40,7 @@ func Solve(f bf.Formula) map[string]bool {
 
 	vars := map[string]bool{}
 	for idx, name := range pb.Lookup {
-		vars[name] = solution[idx+1]
+		vars[name] = solution[idx]
 	}
 
 	return vars

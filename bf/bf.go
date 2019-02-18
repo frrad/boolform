@@ -419,7 +419,7 @@ type CNF struct {
 func (c *CNF) Lookup() map[int]string {
 	lookup := map[int]string{}
 	for v, ix := range c.vars.Pb {
-		lookup[ix-1] = v.Name
+		lookup[ix] = v.Name
 	}
 	return lookup
 }

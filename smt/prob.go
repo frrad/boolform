@@ -1,30 +1,73 @@
 package smt
 
 import (
+	"fmt"
+	"sync"
+
 	"github.com/frrad/boolform/bf"
 )
 
-// Problem is a thin wrapper around Formula to allow for gradually building up a
-// complex formula out of many separate assertions.
+// Problem is an SMT problem instance.
 type Problem struct {
-	form bf.Formula
+	assertions bf.Formula
+
+	varNames map[string]bool
+
+	nameIx int
+	nameMx sync.RWMutex
+
+	solved bool
+	sol    map[string]bool
 }
 
-// NewProb creates a new Problem instance to start building from.
+// NewProb creates a new Problem instance.
 func NewProb() *Problem {
 	return &Problem{
-		form: bf.True,
+		assertions: bf.True,
+
+		varNames: map[string]bool{},
+
+		nameIx: 0,
+		nameMx: sync.RWMutex{},
+
+		solved: false,
 	}
 }
 
 // Assert adds the requirement that the given assertion be true to the Problem
 // instance.
-func (p *Problem) Assert(ass bf.Formula) {
-	p.form = bf.And(p.form, ass)
+func (p *Problem) Assert(ass *Bool) {
+	p.assertions = bf.And(p.assertions, ass.wrapped)
 }
 
 // AsFormula can be used to retrieve the Formula representation of the problem
 // we've built up.
 func (p *Problem) AsFormula() bf.Formula {
-	return p.form
+	return p.assertions
+}
+
+// AsFormula can be used to retrieve the Formula representation of the problem
+// we've built up.
+func (p *Problem) Solve(backend func(bf.Formula) map[string]bool) bool {
+	sol := backend(p.assertions)
+	if sol == nil {
+		return false
+	}
+
+	p.solved = true
+	p.sol = sol
+
+	return true
+}
+
+func (p *Problem) nextName() string {
+	p.nameMx.Lock()
+	name := fmt.Sprintf("%d", p.nameIx)
+	for p.varNames[name] {
+		p.nameIx++
+		name = fmt.Sprintf("%d", p.nameIx)
+	}
+	p.varNames[name] = true
+	p.nameMx.Unlock()
+	return name
 }

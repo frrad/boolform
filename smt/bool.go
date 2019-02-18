@@ -93,9 +93,7 @@ func (a *Bool) And(rest ...*Bool) *Bool {
 }
 
 func (a *Bool) Or(rest ...*Bool) *Bool {
-	fmt.Println('.')
 	unwrap := make([]bf.Formula, len(rest)+1)
-	fmt.Println(len(unwrap))
 	unwrap[0] = a.wrapped
 	for i := 0; i < len(rest); i++ {
 		unwrap[i+1] = rest[i].wrapped

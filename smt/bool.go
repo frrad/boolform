@@ -9,8 +9,8 @@ import (
 type Bool struct {
 	wrapped bf.Formula
 
-	// name is a unique name for this var. It is only guaranteed to correspond
-	// to the name of the underlying bf.Formula for non-dummy variables
+	// name is a unique name for this var. It should correspond to the name of
+	// the underlying bf.Formula.
 	name string
 
 	// prob is a pointer to the problem instance that this var belongs to.
@@ -78,5 +78,16 @@ func (a *Bool) Unique(rest ...*Bool) *Bool {
 
 func (a *Bool) Eq(b *Bool) *Bool {
 	underlying := bf.Eq(a.wrapped, b.wrapped)
+	return a.prob.wrap(underlying)
+}
+
+func (a *Bool) And(rest ...*Bool) *Bool {
+	unwrap := make([]bf.Formula, len(rest)+1)
+	unwrap[0] = a.wrapped
+	for i := 0; i < len(rest); i++ {
+		unwrap[i+1] = rest[i].wrapped
+	}
+
+	underlying := bf.And(unwrap...)
 	return a.prob.wrap(underlying)
 }

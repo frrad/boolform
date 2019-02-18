@@ -43,6 +43,7 @@ func main() {
 }
 ```
 
+Solving a bitvector problem with gosat:
 ``` golang
 package main
 

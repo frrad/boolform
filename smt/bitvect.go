@@ -11,21 +11,59 @@ func (p *Problem) NewBitVect(n int) *BitVect {
 	return &ans
 }
 
-func (a *BitVect) Eq(b *BitVect) *Bool {
+func (p *Problem) NewBitVectConst(val []bool) *BitVect {
+	z := make([]*Bool, len(val))
+	for i := 0; i < len(val); i++ {
+		z[i] = p.NewBoolConst(val[i])
+	}
+	ans := BitVect(z)
+	return &ans
+}
+
+func (a *BitVect) termwise(f func(s, t *Bool) *Bool, b *BitVect) *BitVect {
 	x, y := []*Bool(*a), []*Bool(*b)
 
 	if len(x) != len(y) {
 		panic("")
 	}
 
-	if len(x) == len(y) {
-		return x[0].Eq(y[0])
+	n := len(x)
+	z := make([]*Bool, n)
+	for i := 0; i < n; i++ {
+		z[i] = f(x[i], y[i])
+	}
+	ans := BitVect(z)
+	return &ans
+}
+
+func (a *BitVect) Eq(b *BitVect) *Bool {
+	z := a.termwise((*Bool).Eq, b)
+
+	zz := []*Bool(*z)
+	if len(zz) == 0 {
+		return zz[0]
 	}
 
-	z := make([]*Bool, len(x))
+	return zz[0].And(zz[1:]...)
+}
+
+func (a *BitVect) And(b *BitVect) *BitVect {
+	g := func(a, b *Bool) *Bool { return a.And(b) }
+	return a.termwise(g, b)
+}
+
+func (a *BitVect) Or(b *BitVect) *BitVect {
+	g := func(a, b *Bool) *Bool { return a.Or(b) }
+	return a.termwise(g, b)
+}
+
+func (a *BitVect) SolVal() []bool {
+	x := []*Bool(*a)
+
+	ans := make([]bool, len(x))
 	for i := 0; i < len(x); i++ {
-		z[i] = x[i].Eq(y[i])
+		ans[i] = x[i].SolVal()
 	}
 
-	return z[0].And(z[1:]...)
+	return ans
 }

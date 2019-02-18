@@ -91,3 +91,16 @@ func (a *Bool) And(rest ...*Bool) *Bool {
 	underlying := bf.And(unwrap...)
 	return a.prob.wrap(underlying)
 }
+
+func (a *Bool) Or(rest ...*Bool) *Bool {
+	fmt.Println('.')
+	unwrap := make([]bf.Formula, len(rest)+1)
+	fmt.Println(len(unwrap))
+	unwrap[0] = a.wrapped
+	for i := 0; i < len(rest); i++ {
+		unwrap[i+1] = rest[i].wrapped
+	}
+
+	underlying := bf.Or(unwrap...)
+	return a.prob.wrap(underlying)
+}

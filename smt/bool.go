@@ -9,8 +9,6 @@ import (
 type Bool struct {
 	wrapped bf.Formula
 
-	dummy bool
-
 	// name is a unique name for this var. It is only guaranteed to correspond
 	// to the name of the underlying bf.Formula for non-dummy variables
 	name string
@@ -19,39 +17,41 @@ type Bool struct {
 	prob *Problem
 }
 
-func (p *Problem) wrap(n string, dum bool, underlying bf.Formula) *Bool {
+func (p *Problem) NewBool() *Bool {
+	n := p.nextName()
+
+	underlying := bf.Var(n)
+
 	ans := &Bool{
 		name:    n,
-		dummy:   dum,
 		wrapped: underlying,
 		prob:    p,
 	}
 
-	if !ans.dummy && ans.wrapped.String() != ans.name {
+	if ans.wrapped.String() != ans.name {
 		panic("skew")
 	}
-
 	return ans
 }
 
-func (p *Problem) NewBool() *Bool {
-	name := p.nextName()
-
-	underlying := bf.Var(name)
-	return p.wrap(name, false, underlying)
-}
-
 func (p *Problem) NewBoolConst(val bool) *Bool {
-	name := p.nextName()
 	var underlying bf.Formula
-
 	if val {
 		underlying = bf.True
 	} else {
 		underlying = bf.False
 	}
 
-	return p.wrap(name, true, underlying)
+	ans := p.NewBool()
+	p.assertFormula(bf.Eq(ans.wrapped, underlying))
+	/////
+	return ans
+}
+
+func (p *Problem) wrap(val bf.Formula) *Bool {
+	x := p.NewBool()
+	p.assertFormula(bf.Eq(x.wrapped, val))
+	return x
 }
 
 func (a *Bool) SolVal() bool {
@@ -73,10 +73,10 @@ func (a *Bool) Unique(rest ...*Bool) *Bool {
 	}
 
 	underlying := bf.Unique(unwrap...)
-	return a.prob.wrap(a.prob.nextName(), true, underlying)
+	return a.prob.wrap(underlying)
 }
 
 func (a *Bool) Eq(b *Bool) *Bool {
 	underlying := bf.Eq(a.wrapped, b.wrapped)
-	return a.prob.wrap(a.prob.nextName(), true, underlying)
+	return a.prob.wrap(underlying)
 }

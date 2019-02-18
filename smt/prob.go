@@ -34,10 +34,14 @@ func NewProb() *Problem {
 	}
 }
 
-// Assert adds the requirement that the given assertion be true to the Problem
-// instance.
+// Assert adds the given assertion to the Problem instance.
 func (p *Problem) Assert(ass *Bool) {
-	p.assertions = bf.And(p.assertions, ass.wrapped)
+	p.assertFormula(ass.wrapped)
+}
+
+// assertFormula adds an assertion of a bf.Formula.
+func (p *Problem) assertFormula(ass bf.Formula) {
+	p.assertions = bf.And(p.assertions, ass)
 }
 
 // AsFormula can be used to retrieve the Formula representation of the problem
@@ -46,8 +50,8 @@ func (p *Problem) AsFormula() bf.Formula {
 	return p.assertions
 }
 
-// AsFormula can be used to retrieve the Formula representation of the problem
-// we've built up.
+// Solve uses the provided backend to solve the problem instance. The results
+// can be retrieved by calling SolVar on the variables of interest.
 func (p *Problem) Solve(backend func(bf.Formula) map[string]bool) bool {
 	sol := backend(p.assertions)
 	if sol == nil {

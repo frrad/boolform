@@ -47,6 +47,12 @@ func (a *BitVect) Eq(b *BitVect) *Bool {
 	return zz[0].And(zz[1:]...)
 }
 
+func (a *BitVect) Concat(b *BitVect) *BitVect {
+	x, y := []*Bool(*a), []*Bool(*b)
+	z := BitVect(append(x, y...))
+	return &z
+}
+
 func (a *BitVect) And(b *BitVect) *BitVect {
 	g := func(a, b *Bool) *Bool { return a.And(b) }
 	return a.termwise(g, b)

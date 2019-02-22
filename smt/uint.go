@@ -39,6 +39,21 @@ func (a *UInt8) Eq(b *UInt8) *Bool {
 	return x.Eq(&y)
 }
 
+func (a *UInt8) Neq(b *UInt8) *Bool {
+	x, y := BitVect(*a), BitVect(*b)
+	return x.Neq(&y)
+}
+
+func (a *UInt8) Lt(b *UInt8) *Bool {
+	x, y := BitVect(*a), BitVect(*b)
+	return x.Lt(&y)
+}
+
+func (a *UInt8) Gt(b *UInt8) *Bool {
+	x, y := BitVect(*a), BitVect(*b)
+	return x.Gt(&y)
+}
+
 func (a *UInt8) Add(b *UInt8) *UInt8 {
 	x, y := BitVect(*a), BitVect(*b)
 	z := x.Add(&y)

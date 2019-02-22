@@ -47,6 +47,34 @@ func (a *BitVect) Eq(b *BitVect) *Bool {
 	return zz[0].And(zz[1:]...)
 }
 
+// Neq or "not equal to" returns a bool which is true iff a is not equal to b.
+func (a *BitVect) Neq(b *BitVect) *Bool {
+	return a.Eq(b).Not()
+}
+
+// Lt returns a bool which is true iff a is less than b
+func (a *BitVect) Lt(b *BitVect) *Bool {
+	x, y := []*Bool(*a), []*Bool(*b)
+	if len(x) != len(y) {
+		panic("nope")
+	}
+
+	head := y[0].And(x[0].Not())
+	if len(x) == 1 {
+		return head
+	}
+
+	xtail := BitVect(x[1:])
+	ytail := BitVect(y[1:])
+
+	return head.Or((x[0].Eq(y[0])).And(xtail.Lt(&ytail)))
+}
+
+// Gt returns a bool which is true iff a greater than b
+func (a *BitVect) Gt(b *BitVect) *Bool {
+	return b.Lt(a)
+}
+
 func (a *BitVect) Concat(b *BitVect) *BitVect {
 	x, y := []*Bool(*a), []*Bool(*b)
 	z := BitVect(append(x, y...))

@@ -102,3 +102,13 @@ func (a *Bool) Or(rest ...*Bool) *Bool {
 	underlying := bf.Or(unwrap...)
 	return a.prob.wrap(underlying)
 }
+
+func (a *Bool) Xor(b *Bool) *Bool {
+	underlying := bf.Xor(a.wrapped, b.wrapped)
+	return a.prob.wrap(underlying)
+}
+
+func (a *Bool) Not() *Bool {
+	underlying := bf.Not(a.wrapped)
+	return a.prob.wrap(underlying)
+}
